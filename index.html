@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Momo Play Wall</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='55' r='40' fill='%23ffc89a'/%3E%3Ccircle cx='36' cy='52' r='8' fill='%23333'/%3E%3Ccircle cx='64' cy='52' r='8' fill='%23333'/%3E%3Cpath d='M50 15 q-4 -10 10 -12' stroke='%234f9a3a' stroke-width='6' fill='none'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <video id="cam" playsinline muted></video>
+
+  <!-- Start overlay: one click on the laptop unlocks sound, fullscreen and camera -->
+  <div id="start" class="overlay">
+    <div class="start-card">
+      <div class="start-logo"><span class="logo-momo">Momo</span><span class="logo-sub">Play Wall</span></div>
+      <button id="startBtn" class="big-btn">Start playing</button>
+      <p class="hint">Opens full screen and turns on the camera. Settings live behind the gear on the home screen.</p>
+    </div>
+  </div>
+
+  <!-- Settings panel (for grown-ups): opens from the gear on the home screen, or the S key -->
+  <div id="settings" class="overlay hidden">
+    <div class="panel">
+      <header>
+        <h2>Settings</h2>
+        <button class="close" data-action="close" aria-label="Close">✕</button>
+      </header>
+      <div class="panel-body">
+
+        <section class="wide quick">
+          <div class="seg-row">
+            <span class="seg-label">Mode</span>
+            <div class="seg" role="radiogroup">
+              <label><input type="radio" name="mode" value="timed" data-key="mode"><span>⏱ Game<small>timed rounds, scores &amp; stars</small></span></label>
+              <label><input type="radio" name="mode" value="free" data-key="mode"><span>∞ Free play<small>never ends, just for fun</small></span></label>
+            </div>
+          </div>
+          <div class="seg-row">
+            <span class="seg-label">Difficulty</span>
+            <div class="seg three" role="radiogroup">
+              <label><input type="radio" name="difficulty" value="easy" data-key="difficulty"><span>Easy<small>few &amp; slow</small></span></label>
+              <label><input type="radio" name="difficulty" value="medium" data-key="difficulty"><span>Medium<small>more &amp; faster</small></span></label>
+              <label><input type="radio" name="difficulty" value="hard" data-key="difficulty"><span>Hard<small>lots &amp; fastest</small></span></label>
+            </div>
+          </div>
+          <div class="seg-row">
+            <span class="seg-label">Players</span>
+            <div class="seg" role="radiogroup">
+              <label><input type="radio" name="players" value="1" data-key="players"><span>1 player</span></label>
+              <label><input type="radio" name="players" value="2" data-key="players"><span>2 players</span></label>
+            </div>
+          </div>
+        </section>
+
+        <section class="wide tools">
+          <h3>Wall &amp; camera tools</h3>
+          <div class="tool-grid">
+            <button data-action="home"><kbd>H</kbd>Go to home screen</button>
+            <button data-action="calibrate"><kbd>C</kbd>Auto calibrate</button>
+            <button data-action="calibrateManual"><kbd>M</kbd>Manual calibrate</button>
+            <button data-action="tester"><kbd>T</kbd>Touch tester</button>
+            <button data-action="debug" id="debugBtn"><kbd>D</kbd>Camera view</button>
+            <button data-action="fullscreen"><kbd>F</kbd>Full screen</button>
+          </div>
+          <p class="status" id="trackStatus"></p>
+        </section>
+
+        <section>
+          <h3>Game</h3>
+          <label class="row">Round length (Game mode) <output data-out="roundSeconds"></output>
+            <input type="range" min="20" max="180" step="5" data-key="roundSeconds"></label>
+          <label class="row">Target size
+            <select data-key="targetSize"><option value="big">Big</option><option value="medium">Medium</option><option value="small">Small</option></select></label>
+          <label class="row check"><input type="checkbox" data-key="colourRule"> Fish: only your own colour counts (2 players, Game mode)</label>
+          <label class="row check"><input type="checkbox" data-key="butterflies"> Mosquito: butterflies you must not hit</label>
+          <label class="row check"><input type="checkbox" data-key="everyoneWins"> Celebrate both kids at the end (no loser)</label>
+        </section>
+
+        <section>
+          <h3>Sound &amp; voice</h3>
+          <label class="row check"><input type="checkbox" data-key="voice"> Momo talks (cheers &amp; instructions)</label>
+          <label class="row">Voice <output data-out="voiceVol"></output>
+            <input type="range" min="0" max="1" step="0.05" data-key="voiceVol"></label>
+          <label class="row">Music <output data-out="musicVol"></output>
+            <input type="range" min="0" max="1" step="0.05" data-key="musicVol"></label>
+          <label class="row">Effects <output data-out="sfxVol"></output>
+            <input type="range" min="0" max="1" step="0.05" data-key="sfxVol"></label>
+          <div class="btns"><button data-action="testVoice">▶ Test voice</button></div>
+        </section>
+
+        <section>
+          <h3>Touch detection</h3>
+          <label class="row">Input
+            <select data-key="inputMode"><option value="camera">Camera (body tracking)</option><option value="mouse">Mouse / touchscreen only</option></select></label>
+          <label class="row">Camera <select data-key="cameraId"><option value="">Default camera</option></select></label>
+          <label class="row">Hand reach <output data-out="reach"></output>
+            <input type="range" min="20" max="140" step="5" data-key="reach"></label>
+          <label class="row">Hold to choose (menus) <output data-out="dwellMs"></output>
+            <input type="range" min="400" max="3000" step="100" data-key="dwellMs"></label>
+          <label class="row check"><input type="checkbox" data-key="ignoreLowHands"> Ignore hands hanging down by the body</label>
+          <label class="row check"><input type="checkbox" data-key="showCursors"> Show glowing hand circles on the wall</label>
+          <label class="row check"><input type="checkbox" data-key="mirrorPlayers"> Swap player sides (orange on the right)</label>
+        </section>
+
+        <section>
+          <h3>Wall</h3>
+          <label class="row">Title on home screen <input type="text" maxlength="24" data-key="title"></label>
+          <div class="btns">
+            <button data-action="reset" class="danger">Reset all settings</button>
+          </div>
+          <p class="status">Shortcuts: S opens this panel, 1 or 2 sets players, P saves a painting, Esc goes home.</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- MediaPipe (body tracking) — loaded locally, works offline when served from localhost -->
+  <script src="lib/mediapipe/vision_bundle.js"></script>
+
+  <!-- Engine -->
+  <script src="sounds/voice/voice-lines.js"></script>
+  <script src="js/core/util.js"></script>
+  <script src="js/core/settings.js"></script>
+  <script src="js/core/audio.js"></script>
+  <script src="js/core/art.js"></script>
+  <script src="js/core/ui-kit.js"></script>
+  <script src="js/core/scenery.js"></script>
+  <script src="js/core/input.js"></script>
+  <script src="js/core/tracker.js"></script>
+  <script src="js/core/ui.js"></script>
+  <script src="js/core/round.js"></script>
+  <script src="js/core/calibration.js"></script>
+  <script src="js/core/tester.js"></script>
+
+  <!-- Games: each file registers itself with WG.registerGame(...) -->
+  <script src="js/games/fish.js"></script>
+  <script src="js/games/mosquito.js"></script>
+  <script src="js/games/bubbles.js"></script>
+  <script src="js/games/fireflies.js"></script>
+  <script src="js/games/paint.js"></script>
+
+  <script src="js/core/home.js"></script>
+  <script src="js/core/main.js"></script>
+</body>
+</html>
