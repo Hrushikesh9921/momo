@@ -57,12 +57,13 @@
         <section class="wide tools">
           <h3>Wall &amp; camera tools</h3>
           <div class="tool-grid">
-            <button data-action="home"><kbd>H</kbd>Go to home screen</button>
+            <button data-action="home"><kbd>H</kbd>Home screen</button>
             <button data-action="calibrate"><kbd>C</kbd>Auto calibrate</button>
             <button data-action="calibrateManual"><kbd>M</kbd>Manual calibrate</button>
             <button data-action="tester"><kbd>T</kbd>Touch tester</button>
             <button data-action="debug" id="debugBtn"><kbd>D</kbd>Camera view</button>
             <button data-action="fullscreen"><kbd>F</kbd>Full screen</button>
+            <button data-action="swapColours"><kbd>X</kbd>Swap colours</button>
           </div>
           <p class="status" id="trackStatus"></p>
         </section>
@@ -101,7 +102,8 @@
             <input type="range" min="400" max="3000" step="100" data-key="dwellMs"></label>
           <label class="row check"><input type="checkbox" data-key="ignoreLowHands"> Ignore hands hanging down by the body</label>
           <label class="row check"><input type="checkbox" data-key="showCursors"> Show glowing hand circles on the wall</label>
-          <label class="row check"><input type="checkbox" data-key="mirrorPlayers"> Swap player sides (orange on the right)</label>
+          <label class="row check"><input type="checkbox" data-key="keepColours"> Kids keep their colour when they swap sides</label>
+          <label class="row check"><input type="checkbox" data-key="mirrorPlayers"> Orange starts on the right</label>
         </section>
 
         <section>
@@ -130,6 +132,7 @@
   <script src="js/core/ui-kit.js"></script>
   <script src="js/core/scenery.js"></script>
   <script src="js/core/input.js"></script>
+  <script src="js/core/player-tracker.js"></script>
   <script src="js/core/tracker.js"></script>
   <script src="js/core/ui.js"></script>
   <script src="js/core/round.js"></script>

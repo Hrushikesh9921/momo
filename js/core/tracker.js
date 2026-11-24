@@ -22,6 +22,11 @@
   let lastVideoTime = -1, lastDetect = 0, frames = 0, fpsT0 = performance.now();
   const smooth = new Map(); // key -> {x, y, seen, born}
   let loadingModel = null;
+  const players = new WG.PlayerTracker();
+  T.people = [];
+  // Called when a new game starts or the grown-up asks: forget who was who
+  T.resetPlayers = function () { players.reset(); };
+  T.swapPlayers = function () { players.swap(); };
 
   function setStatus(s) { T.statusText = s; WG.updateTrackStatus && WG.updateTrackStatus(); }
 
@@ -61,7 +66,7 @@
   T.stop = function () {
     T.ready = false;
     if (T.stream) T.stream.getTracks().forEach((t) => t.stop());
-    T.stream = null; T.hands = []; T.poses = [];
+    T.stream = null; T.hands = []; T.poses = []; T.people = []; players.reset();
   };
 
   T.restart = function () { T.stop(); T.start(); };
@@ -122,20 +127,28 @@
   function process(res, now) {
     const vw = T.video.videoWidth, vh = T.video.videoHeight;
     T.poses = (res && res.landmarks) || [];
-    if (!WG.calib.H) { T.hands = []; return; }
+    if (!WG.calib.H) { T.hands = []; T.people = []; return; }
     const S = WG.settings;
 
-    // where is each kid standing? (shoulder centre mapped onto the wall)
+    // where is each kid standing? (shoulder centre + shoulder width, mapped onto the wall)
     const people = T.poses.map((lm) => {
-      const sx = (lm[11].x + lm[12].x) / 2 * vw, sy = (lm[11].y + lm[12].y) / 2 * vh;
-      return { lm, cx: mapPt(sx, sy)[0] };
-    }).sort((a, b) => a.cx - b.cx);
+      const [ax, ay] = mapPt(lm[11].x * vw, lm[11].y * vh), [bx, by] = mapPt(lm[12].x * vw, lm[12].y * vh);
+      return { lm, x: (ax + bx) / 2, y: (ay + by) / 2, size: Math.hypot(ax - bx, ay - by) };
+    }).sort((a, b) => a.x - b.x);
 
-    people.forEach((p, i) => {
-      if (S.players < 2) p.player = 0;
-      else if (people.length >= 2) p.player = S.mirrorPlayers ? 1 - i : i;
-      else p.player = WG.playerFromX(p.cx);
-    });
+    if (S.players > 1 && S.keepColours) {
+      // each kid keeps their colour even after swapping sides
+      players.update(people, now, { players: S.players, sideOf: WG.playerFromX });
+    } else {
+      // colour by side: left kid orange, right kid blue (swaps when they swap places)
+      people.forEach((p, i) => {
+        p.trackId = 'side' + i;
+        if (S.players < 2) p.player = 0;
+        else if (people.length >= 2) p.player = S.mirrorPlayers ? 1 - i : i;
+        else p.player = WG.playerFromX(p.x);
+      });
+    }
+    T.people = people;
 
     const seenKeys = new Set();
     for (const p of people) {
@@ -152,7 +165,7 @@
         const tx = mx + (mx - w.x) * 0.4, ty = my + (my - w.y) * 0.4;
         const [gx, gy] = mapPt(tx * vw, ty * vh);
         if (gx < -150 || gx > WG.W + 150 || gy < -150 || gy > WG.H + 150) continue;
-        const key = p.player + name;
+        const key = p.trackId + name;
         if (seenKeys.has(key)) continue;
         seenKeys.add(key);
         const s = smooth.get(key);
@@ -196,8 +209,9 @@
         WG.calib.camPts.forEach(([px, py], i) => (i ? ctx.lineTo(x + px * sx, y + py * sy) : ctx.moveTo(x + px * sx, y + py * sy)));
         ctx.closePath(); ctx.stroke();
       }
-      T.poses.forEach((lm, pi) => {
-        ctx.strokeStyle = pi ? '#5fb8ff' : '#ff9a3a'; ctx.lineWidth = 3;
+      const drawn = T.people.length ? T.people : T.poses.map((lm) => ({ lm, player: 0 }));
+      drawn.forEach(({ lm, player }) => {
+        ctx.strokeStyle = WG.PLAYER_COLORS[player || 0].main; ctx.lineWidth = 4;
         for (const [a, b] of BONES) { ctx.beginPath(); ctx.moveTo(x + lm[a].x * w, y + lm[a].y * h); ctx.lineTo(x + lm[b].x * w, y + lm[b].y * h); ctx.stroke(); }
         ctx.fillStyle = '#fff';
         for (const i of [15, 16, 19, 20]) { ctx.beginPath(); ctx.arc(x + lm[i].x * w, y + lm[i].y * h, 5, 0, 7); ctx.fill(); }

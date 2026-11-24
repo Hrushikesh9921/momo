@@ -64,6 +64,7 @@ Click the **⚙ gear** at the top-right of the home screen (mouse or touchpad on
 | **H** or **Esc** | Home |
 | **1** / **2** | 1 player / 2 players |
 | **F** | Full screen |
+| **X** | Swap the two kids' colours (if the camera guessed them the wrong way round) |
 | **P** | Save the painting (in Paint the Wall) |
 
 The mouse always works too. Click anywhere to play or test without the camera.
@@ -89,7 +90,8 @@ The mouse always works too. Click anywhere to play or test without the camera.
 | Hand reach | 70 px | Bigger = easier to hit things |
 | Hold to choose | 1.2 s | How long to hold on a menu card |
 | Ignore hands hanging down | On | Stops a resting arm from catching fish |
-| Swap player sides | Off | If orange should be the right-hand kid |
+| Kids keep their colour when they swap sides | On | Off = colour goes by side (left orange, right blue) |
+| Orange starts on the right | Off | Which side is orange at the start of each game |
 
 ## 7. Troubleshooting
 
@@ -116,6 +118,7 @@ js/core/
   scenery.js             layered paper backgrounds for every game
   input.js               merges camera hands + mouse into "pointers"
   tracker.js             camera + MediaPipe pose → hand positions on the wall
+  player-tracker.js      keeps each kid's colour when they move around
   calibration.js         auto/manual calibration
   ui.js                  hold-to-select wall buttons
   round.js               shared game flow: countdown → play → results
@@ -127,6 +130,7 @@ sounds/voice/            Momo's recorded voice lines (mp3) + voice-lines.js list
 lib/mediapipe/           Google MediaPipe Tasks Vision 1.2.3 (Apache-2.0)
 fonts/                   Grandstander (wall) + Lexend (settings), SIL Open Font License
 models/                  pose model goes here (downloaded by the start scripts)
+tests/                   node tests (node tests/player-tracker.test.js)
 ```
 
 ### Adding a new game
@@ -151,7 +155,9 @@ WG.registerGame({ id: 'mygame', name: 'My Game', music: 'home', intro: 'Spoken i
 
 ## 9. How touch detection works (and its limits)
 
-The camera looks at the kids from behind. Google MediaPipe Pose finds up to 2 bodies and their hands. Each hand position is mapped onto the wall using the calibration. A hand **over** a target counts as a touch. A single camera can't tell "touching" from "hovering 10 cm in front", but for toddlers that feels like touching. The kid on the left is orange, the kid on the right is blue. If they swap places, their colours swap too.
+The camera looks at the kids from behind. Google MediaPipe Pose finds up to 2 bodies and their hands. Each hand position is mapped onto the wall using the calibration. A hand **over** a target counts as a touch. A single camera can't tell "touching" from "hovering 10 cm in front", but for toddlers that feels like touching.
+
+**Who is orange and who is blue:** at the start of each game the kid on the left is orange and the kid on the right is blue. After that each kid keeps their colour, even if they run to the other side (`js/core/player-tracker.js` follows each kid by where they're moving and how big they look). If a kid steps out of the picture for up to 4 seconds, they get the same colour back. If the colours ever end up the wrong way round, press **X**. The test `node tests/player-tracker.test.js` checks this logic.
 
 ## 10. Momo's voice
 

@@ -16,6 +16,7 @@
     ignoreLowHands: true,
     showCursors: true,
     mirrorPlayers: false,
+    keepColours: true,      // each kid keeps their colour when they swap sides
     musicVol: 0.35,
     sfxVol: 0.8,
     voice: true,
@@ -115,6 +116,7 @@
       if (act === 'tester') { WG.closeSettings(); WG.setScene(new WG.TesterScene()); }
       if (act === 'debug') { WG.debugView = !WG.debugView; a.classList.toggle('on', WG.debugView); WG.toast(WG.debugView ? 'Camera view on (D to toggle)' : 'Camera view off'); }
       if (act === 'home') { WG.closeSettings(); WG.goHome(); }
+      if (act === 'swapColours') { WG.swapColours(); }
       if (act === 'testVoice') { WG.audio.unlock(); WG.audio.voice('voice_test'); }
       if (act === 'fullscreen') WG.toggleFullscreen();
       if (act === 'reset') {

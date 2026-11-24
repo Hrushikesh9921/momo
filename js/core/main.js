@@ -9,6 +9,14 @@
     if (def) WG.setScene(def.create(def));
   };
 
+  // Grown-up fix if the camera guessed the kids' colours the wrong way round
+  WG.swapColours = function () {
+    if (WG.settings.players < 2) { WG.toast('Swap colours needs 2 players'); return; }
+    if (WG.settings.keepColours) WG.tracker.swapPlayers();
+    else { WG.settings.mirrorPlayers = !WG.settings.mirrorPlayers; WG.saveSettings(); }
+    WG.toast('Kids\u2019 colours swapped');
+  };
+
   WG.toggleFullscreen = function () {
     try {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen();
@@ -50,6 +58,7 @@
     else if (k === 'd') { WG.debugView = !WG.debugView; }
     else if (k === 'h' || k === 'escape') WG.goHome();
     else if (k === 'f') WG.toggleFullscreen();
+    else if (k === 'x') WG.swapColours();
     else if (k === '1' || k === '2') { WG.settings.players = +k; WG.saveSettings(); WG.toast(k === '1' ? '1 player' : '2 players'); }
   });
 

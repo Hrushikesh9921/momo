@@ -34,6 +34,7 @@
       this.particles = new WG.Particles();
       this.floats = new WG.FloatTexts();
       this.twoP = WG.settings.players > 1;
+      if (WG.tracker.resetPlayers) WG.tracker.resetPlayers(); // left kid starts orange, right kid blue
       // free-play flow
       this.pace = 1; this.crowd = 1; this.paceTarget = 1; this.crowdTarget = 1;
       this.flowT = WG.rand(6, 10); this.partyT = 0; this.nextParty = WG.rand(35, 60);

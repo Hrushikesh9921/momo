@@ -106,7 +106,7 @@ button { font: inherit; color: inherit; }
 .seg input:focus-visible + span { outline: 3px solid var(--coral); outline-offset: 2px; }
 
 /* tools */
-.tool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.tool-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .tool-grid button {
   display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 14px; cursor: pointer; text-align: left;
   font: 500 16px var(--text); color: var(--plum); border: 2px solid var(--plum-line); background: var(--paper);
